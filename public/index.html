@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مستكشف المؤثرين — explorinfluencer من influUGC</title>
+<meta name="description" content="ابحث في قاعدة بيانات مؤثرين influUGC: فلتر حسب الدولة والمنصة وعدد المتابعين. بيانات التواصل الكاملة للمشتركين على influUGC.">
+<link rel="icon" href="/assets/influugc-logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-in">
+    <div class="brand">
+      <img src="/assets/influugc-logo.png" alt="influUGC" class="logo">
+      <div>
+        <div class="brand-name">explorinfluencer</div>
+        <div class="brand-sub" data-i18n="brandSub">مستكشف المؤثرين من influUGC</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="langToggle" class="btn ghost" type="button">EN</button>
+      <a class="btn lime" href="https://www.influugc.com/book?utm_source=explorinfluencer&utm_medium=satellite&utm_campaign=network" data-i18n="bookCta">احجز استشارة مجانية</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 data-i18n="heroTitle">ابحث في قاعدة بيانات المؤثرين</h1>
+    <p class="hero-sub"><span data-i18n="heroSubA">أكثر من</span> <strong id="statTotal">—</strong> <span data-i18n="heroSubB">كريتور في مصر والخليج والوطن العربي — فلتر حسب الدولة والمنصة وعدد المتابعين.</span></p>
+    <p class="teaser-note" data-i18n="teaserNote">النسخة المجانية للاستكشاف: بيانات التواصل الكاملة (رقم الهاتف / الإيميل / واتساب) متاحة للمشتركين على منصة influUGC.</p>
+  </section>
+
+  <form id="filters" class="filters">
+    <label>
+      <span data-i18n="fCountry">الدولة</span>
+      <select id="fCountry"></select>
+    </label>
+    <label>
+      <span data-i18n="fPlatform">المنصة</span>
+      <select id="fPlatform">
+        <option value="" data-i18n="allPlatforms">كل المنصات</option>
+        <option value="ig">Instagram</option>
+        <option value="tt">TikTok</option>
+        <option value="fb">Facebook</option>
+        <option value="snap">Snapchat</option>
+        <option value="yt">YouTube</option>
+        <option value="kick">Kick</option>
+        <option value="twitch">Twitch</option>
+      </select>
+    </label>
+    <label>
+      <span data-i18n="fMin">الحد الأدنى للمتابعين</span>
+      <select id="fMin">
+        <option value="0" data-i18n="anyCount">الكل</option>
+        <option value="10000">+10K</option>
+        <option value="50000">+50K</option>
+        <option value="100000">+100K</option>
+        <option value="500000">+500K</option>
+        <option value="1000000">+1M</option>
+      </select>
+    </label>
+    <label class="grow">
+      <span data-i18n="fQ">بحث بالاسم أو التصنيف</span>
+      <input id="fQ" type="search" data-i18n-ph="qPh" placeholder="مثال: طبخ، جيمينج، أو اسم كريتور">
+    </label>
+    <button class="btn lime" type="submit" data-i18n="searchBtn">ابحث</button>
+  </form>
+
+  <div id="status" class="status" role="status"></div>
+  <section id="grid" class="grid" aria-live="polite"></section>
+  <div class="more-row">
+    <button id="moreBtn" class="btn ghost hidden" type="button" data-i18n="moreBtn">عرض المزيد</button>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <p class="network-line" data-i18n="networkLine">explorinfluencer جزء من شبكة influUGC — وكالة التسويق وصناعة المحتوى (القاهرة، مصر).</p>
+    <div class="footer-actions">
+      <a class="btn lime" href="https://www.influugc.com/book?utm_source=explorinfluencer&utm_medium=satellite&utm_campaign=network" data-i18n="bookCta">احجز استشارة مجانية</a>
+      <a class="btn ghost" href="https://wa.me/201029979797">WhatsApp</a>
+      <a class="btn ghost" href="https://www.influugc.com">influugc.com</a>
+    </div>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: explorinfluencer
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: COLLECTOR_API_URL
+        value: https://influugc-collector-production.up.railway.app

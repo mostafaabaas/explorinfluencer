@@ -1,9 +1,13 @@
 "use strict";
-/* explorinfluencer v2-directory frontend — talks ONLY to this
+/* explorinfluencer v3-photos frontend — talks ONLY to this
    service's /api/* proxy. Contact data never exists in the browser:
    the server sends per-type existence booleans, and the contact
    block below renders static placeholder shapes behind a CSS blur.
-   There is nothing real in the page to un-blur. */
+   There is nothing real in the page to un-blur. Creator photos come
+   from the server's /api/avatar proxy (country + row id only — no
+   handle, no upstream URL in the page). Account handles render ONLY
+   when the server payload carries them (owner's HANDLE_MODE switch);
+   otherwise the accounts section renders blurred placeholders. */
 
 const I18N = {
   ar: {
@@ -14,7 +18,7 @@ const I18N = {
     subscribeNow: "اشترك الآن", sideFoot: "explorinfluencer.com",
     login: "تسجيل الدخول", signup: "إنشاء حساب",
     heroTitle: "اكتشف كريتورز الوطن العربي",
-    heroSub: "ابحث في قاعدة بيانات حية للكريتورز — كل البيانات العامة ظاهرة: الدولة والفئة وعدد المتابعين على كل منصة. بيانات التواصل تظهر مموّهة، وتُفتح للمشتركين.",
+    heroSub: "الدليل يعرض فقط الكريتورز الذين لديهم بيانات تواصل — كل البيانات العامة ظاهرة: الدولة والفئة وعدد المتابعين على كل منصة. بيانات التواصل نفسها تظهر مموّهة، وتُفتح للمشتركين.",
     statCreators: "كريتور", statCountries: "دولة", statContact: "لديهم بيانات تواصل",
     smartTitle: "بحث ذكي",
     smartHint: "اكتب بجملة واحدة: دولة، منصة، فئة، أو حد متابعين — مثال: «تيك توك مصر فوق 100 ألف».",
@@ -46,12 +50,12 @@ const I18N = {
     footSub: "جزء من شبكة", bookCta: "احجز استشارة مجانية",
     loading: "جارٍ البحث…",
     followers: "متابع", totalFollowers: "إجمالي المتابعين", platformsCount: "منصات",
-    contactTitle: "بيانات التواصل", cPhone: "الهاتف", cEmail: "البريد", cWhatsapp: "واتساب", cLinks: "روابط الحسابات",
+    contactTitle: "بيانات التواصل", accountsTitle: "الحسابات", cPhone: "الهاتف", cEmail: "البريد", cWhatsapp: "واتساب", cLinks: "روابط الحسابات",
     unlock: "اشترك لفتح بيانات التواصل",
     noContact: "لا توجد بيانات تواصل متاحة لهذا الكريتور",
     viewProfile: "عرض الملف", allCats: "الكل",
-    resultLine: (shown, count, country, total) =>
-      `عرض <b>${shown}</b> من <b>${count}</b> نتيجة مطابقة في ${country} · إجمالي القاعدة في ${country}: <b>${total}</b>`,
+    resultLine: (shown, count, country) =>
+      `عرض <b>${shown}</b> من <b>${count}</b> نتيجة مطابقة في ${country} · كل النتائج المعروضة لديها بيانات تواصل`,
     noResults: "لا توجد نتائج مطابقة — جرّب تخفيف الفلاتر.",
     error: "حدثت مشكلة في الاتصال بقاعدة البيانات — حاول مرة أخرى بعد قليل.",
     langBtn: "EN",
@@ -64,7 +68,7 @@ const I18N = {
     subscribeNow: "Subscribe now", sideFoot: "explorinfluencer.com",
     login: "Log in", signup: "Sign up",
     heroTitle: "Discover Arab-World Creators",
-    heroSub: "Search a live creator database — all public data is visible: country, category and follower counts on every platform. Contact details are shown blurred and unlocked for subscribers.",
+    heroSub: "The directory lists only creators who have contact data — all public data is visible: country, category and follower counts on every platform. The contact details themselves are shown blurred and unlocked for subscribers.",
     statCreators: "creators", statCountries: "countries", statContact: "with contact data",
     smartTitle: "Smart search",
     smartHint: "Type one sentence: a country, platform, category or follower floor — e.g. “TikTok Egypt over 100K”.",
@@ -96,12 +100,12 @@ const I18N = {
     footSub: "Part of the", bookCta: "Book a Free Consultation",
     loading: "Searching…",
     followers: "followers", totalFollowers: "total followers", platformsCount: "platforms",
-    contactTitle: "Contact details", cPhone: "Phone", cEmail: "Email", cWhatsapp: "WhatsApp", cLinks: "Profile links",
+    contactTitle: "Contact details", accountsTitle: "Accounts", cPhone: "Phone", cEmail: "Email", cWhatsapp: "WhatsApp", cLinks: "Profile links",
     unlock: "Subscribe to unlock contact details",
     noContact: "No contact data available for this creator",
     viewProfile: "View profile", allCats: "All",
-    resultLine: (shown, count, country, total) =>
-      `Showing <b>${shown}</b> of <b>${count}</b> matching creators in ${country} · database total in ${country}: <b>${total}</b>`,
+    resultLine: (shown, count, country) =>
+      `Showing <b>${shown}</b> of <b>${count}</b> matching creators in ${country} · every listed creator has contact data`,
     noResults: "No matching results — try loosening the filters.",
     error: "Could not reach the database — please try again shortly.",
     langBtn: "عربي",
@@ -167,6 +171,13 @@ function contactHtml(c) {
   </div>`;
 }
 
+/* Photo overlay: the server-proxied avatar URL (country + row id
+   only). onerror removes the img so the initial letter shows. */
+function avatarImg(c) {
+  if (!c.avatar) return "";
+  return `<img class="avatar-img" src="${esc(c.avatar)}" alt="" loading="lazy" onerror="this.remove()">`;
+}
+
 function cardHtml(c) {
   byId.set(c.id, c);
   const initial = esc((c.name || "؟").trim().charAt(0) || "؟");
@@ -174,14 +185,20 @@ function cardHtml(c) {
   const badge = top
     ? `<span class="top-plat-badge" style="background:${PLAT_COLOR[top.key] || "#6c4cf1"}">${esc(top.label)}</span>`
     : "";
+  // Payload-driven: a handle line appears only when the server sent
+  // handles (owner's visible mode). Hidden mode sends none.
+  const handleLine = top && top.handle
+    ? `<div class="ccard-handle" dir="ltr">@${esc(top.handle)}</div>`
+    : "";
   const chips = c.platforms
     .map((p) => `<span class="plat-chip pc-${p.key}">${ICONS[p.key] || ""}<b>${fmtFol(p.followers)}</b></span>`)
     .join("");
   return `<article class="ccard">
     <div class="ccard-head">
-      <div class="avatar">${initial}</div>
+      <div class="avatar">${initial}${avatarImg(c)}</div>
       <div style="min-width:0">
         <div class="ccard-name">${esc(c.name)} ${badge}</div>
+        ${handleLine}
         <div class="ccard-loc">${esc(c.country)}</div>
         ${c.category ? `<div class="chips" style="margin-top:4px"><span class="chip">${esc(c.category)}</span></div>` : ""}
       </div>
@@ -269,7 +286,7 @@ async function runSearch(append) {
     lastShown = offset;
     status.innerHTML = data.count === 0
       ? t().noResults
-      : t().resultLine(Math.min(lastShown, data.count), data.count, esc(data.country), fmtNum(data.total));
+      : t().resultLine(Math.min(lastShown, data.count), data.count, esc(data.country));
     $("moreBtn").classList.toggle("hidden", offset >= data.count);
   } catch (e) {
     status.textContent = t().error;
@@ -320,7 +337,7 @@ function renderMarquee() {
   if (!marqueeData.length) { track.closest(".marquee-sec").classList.add("hidden"); return; }
   const tile = (c) => {
     const top = c.platforms.reduce((a, p) => (p.followers > (a?.followers || -1) ? p : a), null);
-    return `<div class="mq-tile"><div class="mq-ava">${esc((c.name || "؟").trim().charAt(0) || "؟")}</div><div class="mq-name">${esc(c.name)}</div><div class="mq-sub">${top ? `${esc(top.label)} · ${fmtFol(top.followers)}` : esc(c.country)}</div></div>`;
+    return `<div class="mq-tile"><div class="mq-ava">${esc((c.name || "؟").trim().charAt(0) || "؟")}${avatarImg(c)}</div><div class="mq-name">${esc(c.name)}</div><div class="mq-sub">${top ? `${esc(top.label)} · ${fmtFol(top.followers)}` : esc(c.country)}</div></div>`;
   };
   const html = marqueeData.map(tile).join("");
   track.innerHTML = html + html; // duplicated for the loop
@@ -417,10 +434,37 @@ function renderSmartChips(found) {
 
 /* ---------------- modal ---------------- */
 
+/* «الحسابات» section (profile modal only) — purely payload-driven:
+   if a platform entry carries a handle (owner's visible mode), show
+   it (linked when a URL came with it); otherwise render a blurred
+   placeholder row with the same lock treatment as contact data. */
+function accountsHtml(c) {
+  if (!c.platforms.length) return "";
+  const anyHandle = c.platforms.some((p) => p.handle);
+  const rows = c.platforms
+    .map((p) => {
+      const ico = `<span class="acc-ico pc-${p.key}">${ICONS[p.key] || ""}</span>`;
+      let handle;
+      if (p.handle && p.url) {
+        handle = `<a class="acc-handle" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" dir="ltr">@${esc(p.handle)}</a>`;
+      } else if (p.handle) {
+        handle = `<span class="acc-handle" dir="ltr">@${esc(p.handle)}</span>`;
+      } else {
+        handle = `<span class="acc-handle blurred" dir="ltr">@••••••</span>`;
+      }
+      return `<div class="acc-row">${ico}<span class="acc-plat">${esc(p.label)}</span>${handle}<span class="acc-fol">${fmtFol(p.followers)} ${t().followers}</span></div>`;
+    })
+    .join("");
+  return `<div class="accounts">
+    <div class="contact-title">${anyHandle ? "" : "🔒 "}${t().accountsTitle}</div>
+    ${rows}
+  </div>`;
+}
+
 function openProfile(id) {
   const c = byId.get(id);
   if (!c) return;
-  $("modalBody").innerHTML = cardHtml(c);
+  $("modalBody").innerHTML = cardHtml(c) + accountsHtml(c);
   $("modalBack").classList.remove("hidden");
   document.body.style.overflow = "hidden";
 }

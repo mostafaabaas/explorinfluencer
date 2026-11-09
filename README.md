@@ -17,6 +17,18 @@ values never reach the browser. Full contacts are for subscribers on influUGC.
 - `GET /api/countries` → country list + counts from the collector's `/api/stats`.
 - `GET /api/search?country=&platform=&minFollowers=&q=&limit=&offset=` → masked,
   allowlisted creator cards. Collector responses are cached in memory for ~60s.
+  The directory lists **only creators who have contact data** (phone / email /
+  WhatsApp present) — the filter applies before counting, sorting and
+  pagination, and the full per-country collector total is not exposed here.
+- `GET /api/avatar?c=<country>&id=<rowId>` → the creator's profile photo,
+  derived server-side from their platform profile URLs and proxied: the
+  browser never sees a handle or an upstream URL. Priority instagram →
+  tiktok → youtube → facebook → twitch; any failure is a 404 and the UI
+  falls back to the initial-letter avatar.
+- Per-platform handles/profile URLs join the payload **only** when the
+  server-side `HANDLE_MODE` constant is `"visible"` (owner decision;
+  shipped `"hidden"`: platforms carry `hasAccount` booleans and the
+  accounts section renders blurred placeholders, exactly like contacts).
 
 ## Configuration
 
@@ -24,6 +36,7 @@ values never reach the browser. Full contacts are for subscribers on influUGC.
 |---|---|
 | `PORT` | `3000` (Render sets this automatically) |
 | `COLLECTOR_API_URL` | `https://influugc-collector-production.up.railway.app` |
+| `AVATAR_UPSTREAM` | `https://unavatar.io` (avatar resolver base; server-side only) |
 
 ## Deploy on Render
 
@@ -40,7 +53,10 @@ sidebar + top bar, chips, creator cards). Arabic-first RTL UI with an EN
 toggle. All public data (country, category, per-platform followers) is fully
 visible; the contact block (phone / email / WhatsApp / profile links) renders
 as blurred placeholder rows — the server sends per-type existence booleans
-only, so no real contact or link value ever reaches the browser. Served HTML
-carries `<meta name="ei-build" content="v2-directory">`. Footer:
+only, so no real contact or link value ever reaches the browser. v3-photos
+adds the creators' real profile photos to the cards (server-proxied, see
+`/api/avatar` above) and a payload-driven «الحسابات» section in the profile
+modal. Served HTML
+carries `<meta name="ei-build" content="v3-photos">`. Footer:
 «explorinfluencer.com — منصة مستقلة لاكتشاف الكريتورز» plus the influUGC
 network line with a booking CTA (`utm_source=explorinfluencer`).

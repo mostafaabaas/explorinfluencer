@@ -80,7 +80,7 @@ main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:0 18px}
   border-radius:var(--radius);padding:12px 10px;text-align:center;direction:rtl}
 .mq-ava{width:46px;height:46px;margin:0 auto 7px;border-radius:12px;color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;
-  background:linear-gradient(135deg,var(--accent),#9a7bff)}
+  background:linear-gradient(135deg,var(--accent),#9a7bff);position:relative;overflow:hidden}
 .mq-name{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mq-sub{font-size:11px;color:var(--muted)}
 
@@ -149,7 +149,12 @@ main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:0 18px}
 .ccard-head{display:flex;gap:11px;align-items:center;min-width:0}
 .avatar{width:52px;height:52px;border-radius:12px;flex:none;color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;
-  background:linear-gradient(135deg,var(--accent),#9a7bff);border:1px solid #d9d2fb}
+  background:linear-gradient(135deg,var(--accent),#9a7bff);border:1px solid #d9d2fb;
+  position:relative;overflow:hidden}
+/* server-proxied photo, layered over the initial letter; removed by
+   onerror when no photo resolves, so the initial shows through */
+.avatar-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ccard-handle{font-size:12.5px;font-weight:700;color:var(--accent-dark);text-align:start}
 .ccard-name{font-weight:800;font-size:16.5px;overflow-wrap:anywhere;line-height:1.3;
   display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .top-plat-badge{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px;color:#fff}
@@ -178,6 +183,19 @@ main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:0 18px}
   letter-spacing:.4px;color:var(--ink);direction:ltr}
 .contact-none{font-size:12.5px;color:var(--muted)}
 .unlock-btn{margin-top:8px;width:100%}
+
+/* accounts section (profile modal) — handles render only when the
+   payload carries them; otherwise blurred placeholder rows */
+.accounts{margin-top:12px;border-top:1px dashed #d8d2f5;padding-top:10px}
+.acc-row{display:flex;align-items:center;gap:8px;background:var(--panel2);
+  border-radius:9px;padding:6px 10px;margin-bottom:5px;font-size:12.5px}
+.acc-ico{display:inline-flex;width:16px;height:16px;flex:none}
+.acc-ico svg{width:16px;height:16px}
+.acc-plat{font-weight:700;color:var(--muted);min-width:64px}
+.acc-handle{font-weight:700;color:var(--accent-dark);text-decoration:none;overflow-wrap:anywhere}
+a.acc-handle:hover{text-decoration:underline}
+.acc-handle.blurred{filter:blur(4.5px);user-select:none;pointer-events:none;color:var(--ink)}
+.acc-fol{margin-inline-start:auto;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* card actions */
 .ccard-actions{display:flex;gap:8px}

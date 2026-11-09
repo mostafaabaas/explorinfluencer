@@ -3,88 +3,225 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مستكشف المؤثرين — explorinfluencer من influUGC</title>
-<meta name="description" content="ابحث في قاعدة بيانات مؤثرين influUGC: فلتر حسب الدولة والمنصة وعدد المتابعين. بيانات التواصل الكاملة للمشتركين على influUGC.">
-<link rel="icon" href="/assets/influugc-logo.png">
+<meta name="ei-build" content="v2-directory">
+<title>ExplorInfluencer — اكتشف كريتورز الوطن العربي</title>
+<meta name="description" content="دليل مستقل لاكتشاف الكريتورز في الوطن العربي: ابحث وفلتر حسب الدولة والفئة والمنصة وعدد المتابعين. بيانات التواصل الكاملة للمشتركين.">
+<link rel="icon" href="/assets/ei-mark.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="site-header">
-  <div class="wrap header-in">
-    <div class="brand">
-      <img src="/assets/influugc-logo.png" alt="influUGC" class="logo">
-      <div>
-        <div class="brand-name">explorinfluencer</div>
-        <div class="brand-sub" data-i18n="brandSub">مستكشف المؤثرين من influUGC</div>
+
+<aside class="sidebar">
+  <a class="side-brand" href="#top">
+    <img src="/assets/ei-mark.svg" alt="" class="side-logo">
+    <span>
+      <span class="side-name">ExplorInfluencer</span>
+      <span class="side-sub" data-i18n="brandSub">دليل اكتشاف الكريتورز</span>
+    </span>
+  </a>
+  <nav class="side-nav">
+    <a href="#explore" class="side-link active" data-i18n="navExplore">استكشاف الكريتورز</a>
+    <a href="#plans" class="side-link" data-i18n="navPlans">الباقات</a>
+    <a href="#how" class="side-link" data-i18n="navHow">كيف يعمل</a>
+  </nav>
+  <div class="side-cta">
+    <div class="side-cta-title" data-i18n="sideCtaTitle">بيانات التواصل الكاملة</div>
+    <p class="side-cta-text" data-i18n="sideCtaText">أرقام الهاتف والبريد وروابط حسابات الكريتورز — للمشتركين فقط.</p>
+    <a class="btn primary block" href="#plans" data-i18n="subscribeNow">اشترك الآن</a>
+  </div>
+  <div class="side-foot" data-i18n="sideFoot">explorinfluencer.com</div>
+</aside>
+
+<div class="main-col" id="top">
+  <header class="topbar">
+    <a class="top-brand" href="#top">
+      <img src="/assets/ei-mark.svg" alt="" class="top-logo">
+      <span>ExplorInfluencer</span>
+    </a>
+    <div class="top-actions">
+      <button id="langToggle" class="btn ghost sm" type="button">EN</button>
+      <a class="btn ghost sm" href="https://www.influugc.com/login" data-i18n="login">تسجيل الدخول</a>
+      <a class="btn primary sm" href="https://www.influugc.com/register" data-i18n="signup">إنشاء حساب</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- (1) marquee -->
+    <section class="marquee-sec" aria-hidden="true">
+      <div class="marquee"><div class="marquee-track" id="marqueeTrack"></div></div>
+    </section>
+
+    <!-- (2) hero + stats -->
+    <section class="hero">
+      <h1 data-i18n="heroTitle">اكتشف كريتورز الوطن العربي</h1>
+      <p class="hero-sub" data-i18n="heroSub">ابحث في قاعدة بيانات حية للكريتورز — كل البيانات العامة ظاهرة: الدولة والفئة وعدد المتابعين على كل منصة. بيانات التواصل تظهر مموّهة، وتُفتح للمشتركين.</p>
+      <div class="stats">
+        <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-lab" data-i18n="statCreators">كريتور</div></div>
+        <div class="stat"><div class="stat-num" id="statCountries">—</div><div class="stat-lab" data-i18n="statCountries">دولة</div></div>
+        <div class="stat"><div class="stat-num" id="statContact">—</div><div class="stat-lab" data-i18n="statContact">لديهم بيانات تواصل</div></div>
       </div>
-    </div>
-    <div class="header-actions">
-      <button id="langToggle" class="btn ghost" type="button">EN</button>
-      <a class="btn lime" href="https://www.influugc.com/book?utm_source=explorinfluencer&utm_medium=satellite&utm_campaign=network" data-i18n="bookCta">احجز استشارة مجانية</a>
-    </div>
+      <div class="top-countries" id="topCountries"></div>
+    </section>
+
+    <!-- (3) smart search -->
+    <section class="card smart">
+      <div class="smart-head"><span class="smart-ico">✦</span><b data-i18n="smartTitle">بحث ذكي</b></div>
+      <p class="smart-hint" data-i18n="smartHint">اكتب بجملة واحدة: دولة، منصة، فئة، أو حد متابعين — مثال: «تيك توك مصر فوق 100 ألف».</p>
+      <form id="smartForm" class="smart-form">
+        <input id="smartQ" type="text" data-i18n-ph="smartPh" placeholder="مثال: انستجرام السعودية طبخ فوق 50 ألف">
+        <button class="btn primary" type="submit" data-i18n="smartBtn">ابحث</button>
+      </form>
+      <div class="smart-chips" id="smartChips"></div>
+    </section>
+
+    <!-- (4-6) directory -->
+    <section class="directory" id="explore">
+      <div class="filterbar" id="filterbar">
+        <div class="filterbar-row">
+          <label class="quick-search">
+            <span class="qs-ico">⌕</span>
+            <input id="qInput" type="search" data-i18n-ph="qPh" placeholder="ابحث باسم كريتور أو فئة…">
+          </label>
+          <button id="filtersToggle" class="btn ghost sm" type="button" aria-expanded="false">
+            <span data-i18n="filtersBtn">الفلاتر</span>
+            <span class="badge hidden" id="activeFilterCount">0</span>
+            <span class="chev">▾</span>
+          </button>
+          <button id="clearFilters" class="btn ghost sm hidden" type="button" data-i18n="clearAll">مسح الكل</button>
+        </div>
+        <div class="filter-panel hidden" id="filterPanel">
+          <div class="fp-group">
+            <span class="fp-lab" data-i18n="fpCategory">الفئة</span>
+            <div class="chips-row" id="catChips"></div>
+          </div>
+          <div class="fp-row">
+            <label class="fp-field">
+              <span data-i18n="fCountry">الدولة</span>
+              <select id="fCountry"></select>
+            </label>
+            <label class="fp-field">
+              <span data-i18n="fPlatform">المنصة</span>
+              <select id="fPlatform">
+                <option value="" data-i18n="allPlatforms">كل المنصات</option>
+                <option value="ig">Instagram</option>
+                <option value="tt">TikTok</option>
+                <option value="fb">Facebook</option>
+                <option value="snap">Snapchat</option>
+                <option value="yt">YouTube</option>
+                <option value="kick">Kick</option>
+                <option value="twitch">Twitch</option>
+              </select>
+            </label>
+            <label class="fp-field">
+              <span data-i18n="fMin">الحد الأدنى للمتابعين</span>
+              <select id="fMin">
+                <option value="0" data-i18n="anyCount">الكل</option>
+                <option value="10000">+10K</option>
+                <option value="50000">+50K</option>
+                <option value="100000">+100K</option>
+                <option value="500000">+500K</option>
+                <option value="1000000">+1M</option>
+              </select>
+            </label>
+            <label class="fp-field">
+              <span data-i18n="fSort">الترتيب</span>
+              <select id="fSort">
+                <option value="featured" data-i18n="sortFeatured">الأبرز</option>
+                <option value="followers" data-i18n="sortFollowers">الأعلى متابعين</option>
+                <option value="newest" data-i18n="sortNewest">الأحدث</option>
+              </select>
+            </label>
+            <div class="fp-field">
+              <span data-i18n="fView">العرض</span>
+              <div class="view-toggle" role="group">
+                <button type="button" id="viewGrid" class="vt-btn active" aria-label="grid">▦</button>
+                <button type="button" id="viewList" class="vt-btn" aria-label="list">☰</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="status" class="status" role="status"></div>
+      <section id="grid" class="grid" aria-live="polite"></section>
+      <div class="more-row">
+        <button id="moreBtn" class="btn ghost hidden" type="button" data-i18n="moreBtn">عرض المزيد</button>
+      </div>
+    </section>
+
+    <!-- (7) how + comparison -->
+    <section class="how" id="how">
+      <h2 data-i18n="howTitle">كيف يعمل؟</h2>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><b data-i18n="step1T">ابحث وفلتر</b><p data-i18n="step1D">حسب الدولة والفئة والمنصة وعدد المتابعين.</p></div>
+        <div class="step"><div class="step-num">2</div><b data-i18n="step2T">راجع البيانات العامة</b><p data-i18n="step2D">المتابعون على كل منصة ظاهرون بالكامل للجميع.</p></div>
+        <div class="step"><div class="step-num">3</div><b data-i18n="step3T">اشترك وافتح التواصل</b><p data-i18n="step3D">الهاتف والبريد والروابط تُكشف للمشتركين فقط.</p></div>
+      </div>
+      <div class="compare">
+        <div class="cmp-card">
+          <h3 data-i18n="cmpVisitorT">الزائر يشاهد</h3>
+          <ul>
+            <li class="yes" data-i18n="cmpV1">الاسم والدولة والفئة</li>
+            <li class="yes" data-i18n="cmpV2">عدد المتابعين على كل منصة</li>
+            <li class="yes" data-i18n="cmpV3">بحث وفلترة كاملة</li>
+            <li class="no" data-i18n="cmpV4">بيانات التواصل مموّهة</li>
+          </ul>
+        </div>
+        <div class="cmp-card pro">
+          <h3 data-i18n="cmpProT">المشترك يشاهد</h3>
+          <ul>
+            <li class="yes" data-i18n="cmpP1">كل ما يشاهده الزائر</li>
+            <li class="yes" data-i18n="cmpP2">رقم الهاتف والواتساب كاملًا</li>
+            <li class="yes" data-i18n="cmpP3">البريد الإلكتروني وروابط الحسابات</li>
+            <li class="yes" data-i18n="cmpP4">كشف التواصل بعدّاد شهري عبر منصة influUGC</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- (8) plans -->
+    <section class="plans" id="plans">
+      <h2 data-i18n="plansTitle">الباقات</h2>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <h3 data-i18n="planFreeT">المجانية</h3>
+          <div class="plan-price" data-i18n="planFreePrice">مجانًا</div>
+          <ul>
+            <li data-i18n="planFree1">تصفح وبحث في الدليل كاملًا</li>
+            <li data-i18n="planFree2">كل البيانات العامة ظاهرة</li>
+            <li data-i18n="planFree3">بيانات التواصل مموّهة</li>
+          </ul>
+          <a class="btn ghost block" href="#explore" data-i18n="planFreeBtn">ابدأ الاستكشاف</a>
+        </div>
+        <div class="plan-card pro">
+          <div class="plan-tag" data-i18n="planProTag">للمحترفين</div>
+          <h3>Pro</h3>
+          <div class="plan-price" data-i18n="planProPrice">يُحدَّد من لوحة التحكم</div>
+          <ul>
+            <li data-i18n="planPro1">فتح أرقام الهاتف والواتساب</li>
+            <li data-i18n="planPro2">فتح البريد الإلكتروني وروابط الحسابات</li>
+            <li data-i18n="planPro3">عدّاد كشوفات شهري عبر منصة influUGC</li>
+          </ul>
+          <a class="btn primary block" href="https://www.influugc.com/register" data-i18n="planProBtn">اشترك عبر influUGC</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- (9) footer -->
+  <footer class="site-footer">
+    <p class="foot-main" data-i18n="footMain">explorinfluencer.com — منصة مستقلة لاكتشاف الكريتورز</p>
+    <p class="foot-sub"><span data-i18n="footSub">جزء من شبكة</span> <a href="https://www.influugc.com">influUGC</a> · <a href="https://www.influugc.com/book?utm_source=explorinfluencer&utm_medium=satellite&utm_campaign=network" data-i18n="bookCta">احجز استشارة مجانية</a> · <a href="https://wa.me/201029979797">WhatsApp</a></p>
+  </footer>
+</div>
+
+<!-- profile modal -->
+<div class="modal-back hidden" id="modalBack">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-x" id="modalClose" type="button" aria-label="close">✕</button>
+    <div id="modalBody"></div>
   </div>
-</header>
-
-<main class="wrap">
-  <section class="hero">
-    <h1 data-i18n="heroTitle">ابحث في قاعدة بيانات المؤثرين</h1>
-    <p class="hero-sub"><span data-i18n="heroSubA">أكثر من</span> <strong id="statTotal">—</strong> <span data-i18n="heroSubB">كريتور في مصر والخليج والوطن العربي — فلتر حسب الدولة والمنصة وعدد المتابعين.</span></p>
-    <p class="teaser-note" data-i18n="teaserNote">النسخة المجانية للاستكشاف: بيانات التواصل الكاملة (رقم الهاتف / الإيميل / واتساب) متاحة للمشتركين على منصة influUGC.</p>
-  </section>
-
-  <form id="filters" class="filters">
-    <label>
-      <span data-i18n="fCountry">الدولة</span>
-      <select id="fCountry"></select>
-    </label>
-    <label>
-      <span data-i18n="fPlatform">المنصة</span>
-      <select id="fPlatform">
-        <option value="" data-i18n="allPlatforms">كل المنصات</option>
-        <option value="ig">Instagram</option>
-        <option value="tt">TikTok</option>
-        <option value="fb">Facebook</option>
-        <option value="snap">Snapchat</option>
-        <option value="yt">YouTube</option>
-        <option value="kick">Kick</option>
-        <option value="twitch">Twitch</option>
-      </select>
-    </label>
-    <label>
-      <span data-i18n="fMin">الحد الأدنى للمتابعين</span>
-      <select id="fMin">
-        <option value="0" data-i18n="anyCount">الكل</option>
-        <option value="10000">+10K</option>
-        <option value="50000">+50K</option>
-        <option value="100000">+100K</option>
-        <option value="500000">+500K</option>
-        <option value="1000000">+1M</option>
-      </select>
-    </label>
-    <label class="grow">
-      <span data-i18n="fQ">بحث بالاسم أو التصنيف</span>
-      <input id="fQ" type="search" data-i18n-ph="qPh" placeholder="مثال: طبخ، جيمينج، أو اسم كريتور">
-    </label>
-    <button class="btn lime" type="submit" data-i18n="searchBtn">ابحث</button>
-  </form>
-
-  <div id="status" class="status" role="status"></div>
-  <section id="grid" class="grid" aria-live="polite"></section>
-  <div class="more-row">
-    <button id="moreBtn" class="btn ghost hidden" type="button" data-i18n="moreBtn">عرض المزيد</button>
-  </div>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap footer-in">
-    <p class="network-line" data-i18n="networkLine">explorinfluencer جزء من شبكة influUGC — وكالة التسويق وصناعة المحتوى (القاهرة، مصر).</p>
-    <div class="footer-actions">
-      <a class="btn lime" href="https://www.influugc.com/book?utm_source=explorinfluencer&utm_medium=satellite&utm_campaign=network" data-i18n="bookCta">احجز استشارة مجانية</a>
-      <a class="btn ghost" href="https://wa.me/201029979797">WhatsApp</a>
-      <a class="btn ghost" href="https://www.influugc.com">influugc.com</a>
-    </div>
-  </div>
-</footer>
+</div>
 
 <script src="/app.js"></script>
 </body>

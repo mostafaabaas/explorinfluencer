@@ -34,6 +34,13 @@ command `npm start`, then attach the custom domain `explorinfluencer.com`
 
 ## Design
 
-influUGC family look: black background, neon lime `#C8FF00` accent, Arabic-first
-RTL UI with an EN toggle. Footer carries the influUGC network line with a
-booking CTA (`utm_source=explorinfluencer`) and the client WhatsApp line.
+v2-directory (Nov 2026): ExplorInfluencer's own identity — clean light theme,
+violet `#6c4cf1` accent — on the influugc.com layout system (fixed 252px
+sidebar + top bar, chips, creator cards). Arabic-first RTL UI with an EN
+toggle. All public data (country, category, per-platform followers) is fully
+visible; the contact block (phone / email / WhatsApp / profile links) renders
+as blurred placeholder rows — the server sends per-type existence booleans
+only, so no real contact or link value ever reaches the browser. Served HTML
+carries `<meta name="ei-build" content="v2-directory">`. Footer:
+«explorinfluencer.com — منصة مستقلة لاكتشاف الكريتورز» plus the influUGC
+network line with a booking CTA (`utm_source=explorinfluencer`).

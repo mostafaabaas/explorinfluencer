@@ -6,12 +6,15 @@
  * has nothing to build and nothing to break.
  *
  * PRIVACY CONTRACT (the whole point of this service):
- * The collector API returns full contact data (phone / email / whatsapp).
- * This server is a PROXY + FILTER: it maps every collector row through an
- * explicit ALLOWLIST before anything reaches the browser. Contact fields
- * are never copied into a response — the UI only ever receives a boolean
- * (hasContact) and renders a masked placeholder. Do not add passthrough
- * fields here without thinking about this paragraph.
+ * The collector API returns full contact data (phone / email / whatsapp)
+ * and social profile links. This server is a PROXY + FILTER: it maps
+ * every collector row through an explicit ALLOWLIST before anything
+ * reaches the browser. Contact values AND profile-link values are never
+ * copied into a response — the UI only ever receives per-type existence
+ * booleans and renders blurred placeholder rows from them (v2-directory:
+ * the blur is visual; there is nothing real in the payload to un-blur).
+ * Do not add passthrough fields here without thinking about this
+ * paragraph.
  */
 const http = require("node:http");
 const fs = require("node:fs");
@@ -80,7 +83,8 @@ function cacheSet(key, data) {
 }
 
 /** Country list + totals from /api/stats (the «غير مؤكدة» bucket is an
- *  internal country-evidence holding state, not a public filter). */
+ *  internal country-evidence holding state, not a public filter).
+ *  Aggregates only — no per-creator data leaves through here. */
 async function getCountries() {
   const cached = cacheGet("countries");
   if (cached) return cached;
@@ -88,7 +92,12 @@ async function getCountries() {
   const countries = (stats.byCountry || [])
     .filter((c) => c.country && c.country !== "غير مؤكدة" && c.count > 0)
     .map((c) => ({ name: c.country, count: c.count }));
-  const out = { total: stats.total || 0, countries };
+  const out = {
+    total: stats.total || 0,
+    withContact: stats.withContact || 0,
+    countryCount: countries.length,
+    countries,
+  };
   cacheSet("countries", out);
   return out;
 }
@@ -138,8 +147,6 @@ const PLATFORMS = [
   { key: "twitch", label: "Twitch", urlField: "twitchUrl", folField: "twitchFollowers" },
 ];
 
-const CONTACT_MASK = "01•• ••• •••";
-
 function toCard(r) {
   const platforms = [];
   let maxFollowers = 0;
@@ -148,20 +155,23 @@ function toCard(r) {
     const url = cleanStr(r[p.urlField]);
     const followers = cleanNum(r[p.folField]);
     if (!url && followers === 0) continue;
-    platforms.push({
-      key: p.key,
-      label: p.label,
-      // social profile links are public by nature; only http(s) passes
-      url: /^https?:\/\//i.test(url) ? url : "",
-      followers,
-    });
+    // The profile URL is used ONLY to know the platform exists. Link
+    // values are contact data in this product: they are never copied
+    // into a response (subscribers reveal them on influUGC).
+    platforms.push({ key: p.key, label: p.label, followers });
     if (followers > maxFollowers) maxFollowers = followers;
     totalFollowers += followers;
   }
-  // Existence only — the values themselves never leave this process.
-  const hasContact = Boolean(
-    cleanStr(r.phone) || cleanStr(r.email) || cleanStr(r.whatsapp)
-  );
+  // Existence only, per type — the values themselves never leave
+  // this process. The UI renders blurred placeholder rows from these
+  // booleans; there is nothing real in the payload to un-blur.
+  const contact = {
+    phone: Boolean(cleanStr(r.phone)),
+    email: Boolean(cleanStr(r.email)),
+    whatsapp: Boolean(cleanStr(r.whatsapp)),
+  };
+  const hasContact = contact.phone || contact.email || contact.whatsapp;
+  const ts = Date.parse(cleanStr(r.createdAt));
   return {
     id: cleanStr(r.id),
     name: cleanStr(r.name) || "—",
@@ -171,7 +181,9 @@ function toCard(r) {
     maxFollowers,
     totalFollowers,
     hasContact,
-    contactMasked: hasContact ? CONTACT_MASK : null,
+    contact,
+    // internal sort key for «الأحدث» — stripped before the response
+    createdTs: Number.isFinite(ts) ? ts : 0,
   };
 }
 
@@ -191,6 +203,8 @@ async function handleSearch(res, params) {
   const country = cleanStr(params.get("country")) || "مصر";
   const q = cleanStr(params.get("q")).toLowerCase();
   const platform = cleanStr(params.get("platform"));
+  const category = cleanStr(params.get("category")).toLowerCase();
+  const sort = cleanStr(params.get("sort")) || "featured";
   let minFollowers = parseInt(params.get("minFollowers") || "0", 10);
   if (!Number.isFinite(minFollowers) || minFollowers < 0) minFollowers = 0;
   let limit = parseInt(params.get("limit") || "24", 10);
@@ -206,6 +220,17 @@ async function handleSearch(res, params) {
     return sendJson(res, 502, { error: "collector_unavailable" });
   }
 
+  // Real categories present in the scanned rows (drives the الفئة
+  // filter — every option offered genuinely exists in the data).
+  const catCounts = new Map();
+  for (const r of data.rows) {
+    const c = cleanStr(r.category);
+    if (c) catCounts.set(c, (catCounts.get(c) || 0) + 1);
+  }
+  const categories = [...catCounts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
   const matched = [];
   for (const r of data.rows) {
     const card = toCard(r);
@@ -216,21 +241,37 @@ async function handleSearch(res, params) {
     } else if (minFollowers && card.maxFollowers < minFollowers) {
       continue;
     }
+    if (category && !card.category.toLowerCase().includes(category)) continue;
     if (q) {
       const hay = `${card.name} ${card.category}`.toLowerCase();
       if (!hay.includes(q)) continue;
     }
     matched.push(card);
   }
-  matched.sort(
-    (a, b) => b.maxFollowers - a.maxFollowers || b.totalFollowers - a.totalFollowers
-  );
+  if (sort === "followers") {
+    matched.sort(
+      (a, b) => b.totalFollowers - a.totalFollowers || b.maxFollowers - a.maxFollowers
+    );
+  } else if (sort === "newest") {
+    matched.sort(
+      (a, b) => b.createdTs - a.createdTs || Number(b.id || 0) - Number(a.id || 0)
+    );
+  } else {
+    matched.sort(
+      (a, b) => b.maxFollowers - a.maxFollowers || b.totalFollowers - a.totalFollowers
+    );
+  }
+  const page = matched.slice(offset, offset + limit).map((c) => {
+    const { createdTs, ...pub } = c;
+    return pub;
+  });
   sendJson(res, 200, {
     country,
     total: data.total, // collector's full count for this country
     scanned: data.scanned, // rows this teaser scan covered
     count: matched.length,
-    results: matched.slice(offset, offset + limit),
+    categories,
+    results: page,
   });
 }
 
